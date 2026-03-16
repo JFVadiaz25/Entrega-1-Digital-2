@@ -3,6 +3,11 @@
 from machine import Pin, ADC, mem32, const
 from time import sleep
 
+def Peaton(pin):
+    global BotonPeaton
+    print("Activo el semaforo peatonal")
+    BotonPeaton=1
+
 vectorpines = [12,13,26,25,17,16,27,14]
 
 for i in vectorpines:
@@ -14,6 +19,11 @@ mic.width(ADC.WIDTH_12BIT) # resolución 12 bits (0-4095)
 
 GPIO=const(0x3FF44004)
 semaforo=False
+
+pulsador=Pin(18,Pin.IN,Pin.PULL_DOWN)
+pulsador.irq(trigger=Pin.IRQ_RISING,handler=Peaton)
+
+BotonPeaton=0
 
 while True:
     value = mic.read()
@@ -41,3 +51,16 @@ while True:
             sleep(1)
         mem32[GPIO]=0B0000000000110110000000000000 #Situacion 4 amarillo prende
         sleep(5)
+        if BotonPeaton:
+            print("inicia el ciclo peatonal")
+            mem32[GPIO]=0B0000000000100110000000000000 #Situacion 5 peatonal verde
+            sleep(3)
+            mem32[GPIO]=0B1100000000010000000000000000
+            sleep(5)
+            for i in range(3): #Situacion 5 parpadea verde
+                mem32[GPIO]=0B1100000000010000000000000000
+                sleep(1)
+                mem32[GPIO]=0B0100000000010000000000000000
+                sleep(1)
+            BotonPeaton=0
+        print("Termina el ciclo semaforo")
