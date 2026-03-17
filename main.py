@@ -1,5 +1,5 @@
 # main.py -- put your code here!
-from machine import Pin, ADC, mem32, const, Timer
+from machine import Pin, ADC, mem32, const, Timer,PWM
 from time import sleep
 
 #Pines Semaforo
@@ -11,6 +11,9 @@ mic = ADC(Pin(35))       # ADC en GPIO35
 mic.atten(ADC.ATTN_11DB) # rango 0–3.6V
 mic.width(ADC.WIDTH_12BIT) # resolución 12 bits (0-4095)
 
+pot = ADC(Pin(34))
+pot.atten(ADC.ATTN_11DB)
+pot.width(ADC.WIDTH_10BIT)
 
 #Boton Peatonal
 def Peaton(pin):
@@ -27,8 +30,8 @@ pinesdisplay=[5,23,22,21,0,2,4] #a,b,c,d,e,f,g
 for i in pinesdisplay:
     Pin(i,Pin.OUT)
 
-pinmux=[18,19]
-mux=[Pin(i,Pin.OUT) for i in pinmux]
+mux1 = PWM(Pin(18), freq=1000)
+mux2 = PWM(Pin(19), freq=1000)
 
 display= [[1,1,1,1,1,1,0],
           [0,1,1,0,0,0,0],
@@ -44,34 +47,39 @@ display= [[1,1,1,1,1,1,0],
 def conteo(Timer):
     global contador
     global muxContador
+    global displayContador
     global contadorTiempo
+    displayContador +=1
     muxContador += 1
     contadorTiempo += 1
-    if muxContador == 100:
+    if displayContador == 100:
         if contadorActivo and contador > 0:
             contador -= 1
             print(contador)
-        muxContador = 0
+        displayContador = 0
+    if muxContador == 10:
+        muxContador=0
 
 temporizador = Timer(0)
 temporizador.init(period=10, mode=Timer.PERIODIC, callback=conteo)
 
 def actualizar_display():
     if contadorActivo and contador > 0:
-        mux[0].value(1)
-        mux[1].value(1)
+        mux1.duty(1023)
+        mux2.duty(1023)
 
         if muxContador % 2 == 0:
             for i in range(7):
                 Pin(pinesdisplay[i], value=display[contador % 10][i])
-            mux[1].value(0)
+            mux2.duty(1023-brillo)
+            #mux1.duty(1023)
 
         else:
             decena = contador // 10
             for i in range(7):
                 Pin(pinesdisplay[i], value=display[decena][i])
-            mux[0].value(0)
-
+            mux1.duty(1023-brillo)
+            #mux2.duty(1023)
 
 #Valores iniciales
 contador = 10
@@ -85,12 +93,14 @@ estado=1
 contadorTiempo=0 
 parpadeo=0
 value = 0
+displayContador=0
 
 while True:
     actualizar_display()
-    if muxContador % 20 == 0:
+    if displayContador % 20 == 0:
         value = mic.read()
-        
+        valor = pot.read()           # 0–1023
+    brillo = valor          # convertir a rango PWM 0–65535
 
     if value > 500: #Situacion 0
         semaforo=True
