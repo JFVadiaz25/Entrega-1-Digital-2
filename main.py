@@ -192,7 +192,7 @@ while True:
     if semaforo:
         if estado == 1:
             mem32[GPIO]=0B0010000000000100000000001000 #situacion 1
-            if contadorTiempo >= 500:   # 5 segundos
+            if contadorTiempo >= 50:   # 0.5 segundos
                 contadorTiempo = 0
                 estado = 2
             
@@ -210,7 +210,7 @@ while True:
 
         elif estado == 3:
             mem32[GPIO]=0B0000000000100110000000001000 #Situacion 2 amarillo prende
-            if contadorTiempo >= 500:
+            if contadorTiempo >= 100:
                 contadorTiempo=0
                 estado=4
 
@@ -219,31 +219,41 @@ while True:
             if contadorTiempo == 1:
                 contador = 10
                 contadorActivo = True
-
-            if contadorTiempo >= 1000:
+            if contadorTiempo >= 700:
                 contadorTiempo = 0
-                contadorActivo = False
                 estado = 5
-        elif estado == 5:
+        elif estado == 5: #Parpadea verde situacion 3
+            if contadorTiempo >= 50:
+                contadorTiempo=0
+                parpadeo+=1
+                if parpadeo %2:
+                    mem32[GPIO]=0B0000000000010100000000000000
+                else:
+                    mem32[GPIO]=0B0000000000010101000000000000
+                if parpadeo >=6:
+                    estado=6
+                    parpadeo=0
+                    contadorActivo = False
+        elif estado == 6:
             mem32[GPIO]=0B0000000000110110000000000000 #Situacion 4 amarillo prende
-            if contadorTiempo >= 500:
+            if contadorTiempo >= 300:
                 contadorTiempo=0
                 if BotonPeaton:
                     print("inicia el ciclo peatonal")   
-                    estado=6
+                    estado=7
                 else:
                     estado=1 
-        elif estado == 6:
+        elif estado == 7:
             mem32[GPIO]=0B0000000000100110000000000000 #Situacion 5 peatonal verde
             if contadorTiempo >= 300:
                 contadorTiempo=0
-                estado=7
-        elif estado ==7:
+                estado=8
+        elif estado ==8:
             mem32[GPIO]=0B1100000000010000000000001000
             if contadorTiempo >=500:
                     contadorTiempo=0
-                    estado=8
-        elif estado==8: #Situacion 5 parpadea verde
+                    estado=9
+        elif estado==9: #Situacion 5 parpadea verde
             if contadorTiempo >= 50:
                 contadorTiempo=0
                 parpadeo+=1
