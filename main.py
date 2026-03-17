@@ -18,11 +18,11 @@ def Peaton(pin):
     print("Activo el semaforo peatonal")
     BotonPeaton=1
 
-pulsador=Pin(39,Pin.IN,Pin.PULL_DOWN)
+pulsador=Pin(32,Pin.IN,Pin.PULL_DOWN)
 pulsador.irq(trigger=Pin.IRQ_RISING,handler=Peaton)
 
 #Pines Display Y Mux
-pinesdisplay=[5,23,22,21,0,2,4]
+pinesdisplay=[5,23,22,21,0,2,4] #a,b,c,d,e,f,g
 
 for i in pinesdisplay:
     Pin(i,Pin.OUT)
@@ -90,7 +90,7 @@ while True:
     actualizar_display()
     if muxContador % 20 == 0:
         value = mic.read()
-        print(value)
+        
 
     if value > 500: #Situacion 0
         semaforo=True
@@ -120,7 +120,7 @@ while True:
                 estado=4
 
         elif estado == 4:
-            mem32[GPIO]=0B1000000000010001000000000000
+            mem32[GPIO]=0B0000000000010101000000000000
             if contadorTiempo == 1:
                 contador = 10
                 contadorActivo = True
@@ -138,14 +138,13 @@ while True:
                     estado=6
                 else:
                     estado=1 
-                    print("Termina el ciclo semaforo")
         elif estado == 6:
             mem32[GPIO]=0B0000000000100110000000000000 #Situacion 5 peatonal verde
             if contadorTiempo >= 300:
                 contadorTiempo=0
                 estado=7
         elif estado ==7:
-            mem32[GPIO]=0B1100000000010000000000000000
+            mem32[GPIO]=0B1100000000010000000000001000
             if contadorTiempo >=500:
                     contadorTiempo=0
                     estado=8
@@ -154,11 +153,11 @@ while True:
                 contadorTiempo=0
                 parpadeo+=1
                 if parpadeo %2:
-                    mem32[GPIO]=0B1100000000010000000000000000
+                    mem32[GPIO]=0B1100000000010000000000001000
                 else:
-                    mem32[GPIO]=0B0100000000010000000000000000
+                    mem32[GPIO]=0B0100000000010000000000001000
                 if parpadeo >=6:
                     parpadeo=0
                     BotonPeaton=0
                     estado=1
-                    print("Termina el ciclo semaforo")
+                print("Termina el ciclo semaforo")
